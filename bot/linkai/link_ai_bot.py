@@ -200,7 +200,10 @@ class LinkAIBot(Bot):
                     linkai_config = config.plugin_config.get("linkai")
                     group_mapping = linkai_config.get("group_app_map")
                     if group_mapping and group_name:
-                        return group_mapping.get(group_name)
+                        #从微信群名的末尾获取代码（group_app_map的key）
+                        group_name_suffix = group_name[group_name.rfind('-')+1:]
+                        #返回group_app_map中的value值
+                        return group_mapping.get(group_name_suffix)
         except Exception as e:
             logger.exception(e)
             return None

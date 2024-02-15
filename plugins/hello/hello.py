@@ -1,5 +1,6 @@
 # encoding:utf-8
 
+from lib import itchat
 import plugins
 from bridge.context import ContextType
 from bridge.reply import Reply, ReplyType
@@ -25,6 +26,10 @@ class Hello(Plugin):
         self.config = super().load_config()
 
     def on_handle_context(self, e_context: EventContext):
+        print(f"=========>{e_context.econtext}")
+        print(f"=========>{e_context.econtext['channel'].__dict__}")
+        print(f"=========>{e_context.econtext['reply'].__dict__}")
+
         if e_context["context"].type not in [
             ContextType.TEXT,
             ContextType.JOIN_GROUP,
@@ -33,10 +38,19 @@ class Hello(Plugin):
         ]:
             return
         if e_context["context"].type == ContextType.JOIN_GROUP:
+            
             if "group_welcome_msg" in conf():
                 reply = Reply()
                 reply.type = ReplyType.TEXT
-                reply.content = conf().get("group_welcome_msg", "")
+                
+                #获取当前群昵称
+                receiver = e_context["context"].kwargs['receiver']
+                group_name = itchat.search_chatrooms(userName=receiver)['NickName']
+                
+                group_welcome_config = conf().get("group_welcome_msg", "")
+                group_welcome_msg = group_welcome_config.get(group_name,"")
+                reply.content = group_welcome_msg
+
                 e_context["reply"] = reply
                 e_context.action = EventAction.BREAK_PASS  # 事件结束，并跳过处理context的默认逻辑
                 return
@@ -73,6 +87,7 @@ class Hello(Plugin):
             reply = Reply()
             reply.type = ReplyType.TEXT
             msg: ChatMessage = e_context["context"]["msg"]
+            print(f"=========>{msg.from_user_nickname}")
             if e_context["context"]["isgroup"]:
                 reply.content = f"Hello, {msg.actual_user_nickname} from {msg.from_user_nickname}"
             else:
